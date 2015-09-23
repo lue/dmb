@@ -18,7 +18,7 @@ def myPS(M, z, cosmo):
     Rdw = cosmo.lagrangianR(M/1.01)
     dsigmadM = - (cosmo.sigma(Rup, j=0, z=z) - cosmo.sigma(Rdw, j=0, z=z)) / (0.02 * M)
     dndM = np.sqrt(2/np.pi) * np.exp(-deltac**2 / 2 / sigma**2) * deltac / sigma**2 * dsigmadM / M
-    return dndM * cosmo.matterDensity(0.0)
+    return dndM * (AST_rho_crit_0_kpc3*cosmo.Om0*(1.+z)**3)
 
 def SMT(M, z, cosmo):
     A = 0.3222
