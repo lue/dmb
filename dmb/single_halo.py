@@ -43,7 +43,7 @@ def HaloBoost(z, M, c, alpha):
     profile = NFWProfile(M=M, mdef='vir', z=z, c=c)
     rho0, rs = profile.fundamentalParameters(M, c, z, 'vir')
     Rmax= c*rs
-    R = np.logspace(np.log10(Rmax)-24, np.log10(Rmax), 100000)
+    R = np.logspace(np.log10(Rmax)-24, np.log10(Rmax), 1000)
     rho = NFWa(R, rs, rho0, alpha=alpha)
     V = np.concatenate([[0], 4./3.*np.pi*R**3])
     V = np.diff(V)
