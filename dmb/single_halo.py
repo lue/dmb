@@ -49,7 +49,7 @@ def HaloBoost(z, M, c, alpha):
     V = np.diff(V)
     rho2V = rho**2*V
     B_nu = rho2V.sum() * V.sum() / M**2
-    return B_nu
+    return B_nu, V.sum(), c, rs
 
 def HaloBoost_c_backup(z, M, c, alpha, cs):
     '''
@@ -82,7 +82,39 @@ def HaloBoost_c(z, M, c, alpha, cs):
     y = norm.pdf(x)
     y /= y.sum()
     rand_c = 10**(np.log10(c) + cs * x)
-    temp = 0
+    res = 0
     for i in range(len(rand_c)):
-        temp += HaloBoost(z, M, rand_c[i], alpha) * y[i]
-    return temp
+        temp, Vsum, c, rs = HaloBoost(z, M, rand_c[i], alpha)
+        res += temp * y[i]
+    return res, Vsum, c, rs
+
+def subhaloMF(M,A,zeta,m):
+    '''
+    Simple subhalo mass function model
+    http://arxiv.org/pdf/1312.1729v3.pdf Eq.2
+    :param M: mass of the host halo
+    :param A: normalizing constant
+    :param zeta: power law coefficient
+    :param m: mass of subhalos
+    :return: dn/dm
+    '''
+    return A/M*(m/M)**-zeta
+
+def HaloBoost_sub(z, M, cs, Mmin, A, zeta):
+    c = concentration(M, 'vir', z, model='diemer15')
+    alpha = IshiyamaAlpha(M)
+    BM = HaloBoost_c(z, M, c, alpha, cs)
+    m_list = np.logspace(np.log10(Mmin), np.log10(M), 100)
+    dndm = subhaloMF(M, A, zeta, m_list)
+    c_m = concentration(m_list, 'vir', z, model='diemer15')
+    alpha_m = IshiyamaAlpha(m_list)
+    Bm = np.zeros(len(m_list))
+    Vsum = np.zeros(len(m_list))
+    rs_m = np.zeros(len(m_list))
+    for i in range(len(Bm)-1):
+        Bm[i], Vsum[i], c_m[i], rs_m[i] = HaloBoost_c(z, m_list[i], c_m[i], alpha_m[i], cs)
+    Mh = 1.0*M
+    Mh -= ((m_list[1:]+m_list[:-1])/2.0*(dndm[1:]+dndm[:-1])/2.0*np.diff(m_list)).sum()
+#     print (Bm / Vsum * m_list**2)
+    R = np.sum((Bm[:-1] / Vsum[:-1] * m_list[:-1]**2 * (dndm[1:]+dndm[:-1])/2.0*np.diff(m_list))) + (BM[0] / BM[1] * M**2) * Mh/M
+    return R * BM[1] / M**2, BM[0]
