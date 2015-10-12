@@ -117,4 +117,4 @@ def HaloBoost_sub(z, M, cs, Mmin, A, zeta):
     Mh -= ((m_list[1:]+m_list[:-1])/2.0*(dndm[1:]+dndm[:-1])/2.0*np.diff(m_list)).sum()
 #     print (Bm / Vsum * m_list**2)
     R = np.sum((Bm[:-1] / Vsum[:-1] * m_list[:-1]**2 * (dndm[1:]+dndm[:-1])/2.0*np.diff(m_list))) + (BM[0] / BM[1] * M**2) * Mh/M
-    return R * BM[1] / M**2, BM[0]
+    return BM, R * BM[1] / M**2
