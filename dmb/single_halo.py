@@ -100,14 +100,18 @@ def subhaloMF(M,A,zeta,m):
     '''
     return A/M*(m/M)**-zeta
 
-def HaloBoost_sub(z, M, cs, Mmin, A, zeta):
+def HaloBoost_sub(z, M, cs, Mmin, A, zeta, Ishiyama):
     c = concentration(M, 'vir', z, model='diemer15')
     alpha = IshiyamaAlpha(M)
+    if not Ishiyama:
+        alpha = 1.0
     BM = HaloBoost_c(z, M, c, alpha, cs)
     m_list = np.logspace(np.log10(Mmin), np.log10(M), 100)
     dndm = subhaloMF(M, A, zeta, m_list)
     c_m = concentration(m_list, 'vir', z, model='diemer15')
     alpha_m = IshiyamaAlpha(m_list)
+    if not Ishiyama:
+        alpha_m = alpha_m*0+1.0
     Bm = np.zeros(len(m_list))
     Vsum = np.zeros(len(m_list))
     rs_m = np.zeros(len(m_list))
