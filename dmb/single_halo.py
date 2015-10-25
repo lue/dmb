@@ -15,14 +15,14 @@ def NFWa(r,rs,rho0,alpha=1):
     '''
     return rho0 * (r/rs)**-alpha * (1.0+r/rs)**(alpha-3.0)
 
-def IshiyamaAlpha(M):
+def IshiyamaAlpha(M, Mcrit):
     '''
     Fitting function for alpha (parameter for modified NFW) from Ishiyama 2014:
     http://adsabs.harvard.edu/abs/2014ApJ...788...27I
     :param M: Virial mass of a halo in solar masses.
     :return: alpha (inner slope)
     '''
-    alpha = -0.123*np.log10(M/1e-6)+1.461
+    alpha = -0.123*np.log10(M/Mcrit)+1.461
     if isinstance(alpha, float):
         alpha = np.max([1.0,   alpha])
         alpha = np.min([1.461, alpha])
@@ -43,7 +43,10 @@ def HaloBoost(z, M, c, alpha):
     profile = NFWProfile(M=M, mdef='vir', z=z, c=c)
     rho0, rs = profile.fundamentalParameters(M, c, z, 'vir')
     Rmax= c*rs
-    R = np.logspace(np.log10(Rmax)-24, np.log10(Rmax), 1000)
+    if alpha==1:
+        R = np.logspace(np.log10(rs)-2, np.log10(Rmax), 100)
+    else:
+        R = np.logspace(np.log10(Rmax)-24, np.log10(Rmax), 1000)
     rho = NFWa(R, rs, rho0, alpha=alpha)
     V = np.concatenate([[0], 4./3.*np.pi*R**3])
     V = np.diff(V)
@@ -102,14 +105,15 @@ def subhaloMF(M,A,zeta,m):
 
 def HaloBoost_sub(z, M, cs, Mmin, A, zeta, Ishiyama):
     c = concentration(M, 'vir', z, model='diemer15')
-    alpha = IshiyamaAlpha(M)
+    alpha = IshiyamaAlpha(M, Mmin)
     if not Ishiyama:
         alpha = 1.0
     BM = HaloBoost_c(z, M, c, alpha, cs)
-    m_list = np.logspace(np.log10(Mmin), np.log10(M), 100)
+    # m_list = np.logspace(np.log10(Mmin), np.log10(M), 100)
+    m_list = 10**np.arange(np.log10(Mmin), np.log10(M)+0.001, 0.1)
     dndm = subhaloMF(M, A, zeta, m_list)
     c_m = concentration(m_list, 'vir', z, model='diemer15')
-    alpha_m = IshiyamaAlpha(m_list)
+    alpha_m = IshiyamaAlpha(m_list, Mmin)
     if not Ishiyama:
         alpha_m = alpha_m*0+1.0
     Bm = np.zeros(len(m_list))
